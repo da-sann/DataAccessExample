@@ -1,7 +1,7 @@
 # DataAccessExample
 
 Usage example
-
+```c
 private readonly ISampleEntityUnitOfWork _sampleEntityUnitOfWork;
         private readonly IMapper _mapper;
 
@@ -65,3 +65,4 @@ private readonly ISampleEntityUnitOfWork _sampleEntityUnitOfWork;
 
             return Ok(result);
         }
+```
