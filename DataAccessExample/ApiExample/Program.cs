@@ -1,25 +1,38 @@
+using ApiExample;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using DataAccessExample.Modules;
+using DataAccessExample.Profiles;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+var startup = new Startup(builder.Configuration);
+startup.ConfigureServices(builder.Services, builder.Environment);
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Logging.ClearProviders();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
+builder.WebHost.UseUrls("http://+:5000");
+
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+
+
+builder.Host.ConfigureContainer<ContainerBuilder>(b =>
+{
+	b.RegisterModule<DBContextModule>();
+	b.RegisterModule<RepositoryModule>();
+	b.RegisterModule<RequestHandlersModule>();
+	b.RegisterModule(new MigrationModule(builder.Configuration));
+	b.RegisterModule(new AutoMapperModule(cfg =>
+	{
+		cfg.AddProfile<EntityToModelProfile>();
+	}));
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
+startup.Configure(app, builder.Environment);
 
 app.Run();
